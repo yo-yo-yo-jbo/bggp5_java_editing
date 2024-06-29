@@ -1,4 +1,4 @@
-# Continuing with
+# Binary Golf and Java classes
 Continuing with my [Binary Golf](https://binary.golf) adventure for year 5, I've decided to try and create the smallest Java class that downloads and presents the file.  
 Some conclusions from my [Linux shellcode blogpost](https://github.com/yo-yo-yo-jbo/bggp5_linux_shellcode/):
 1. Running `curl` is fair game and saves a lot of file size.
@@ -68,7 +68,100 @@ Without going into too many details, the format is quite simple:
 - Then we have 3 other simple fields: the class's *access flags*, followed by an index that should point to a descriptor of the class (in the constant pool) and an index that points to the superclass.
 - Finally, we have *interfaces*, *fields*, *methods* and *attributes*. All of them are simple arrays, and most of them use indices that point to the constant pool.
 
-It took me around an hour to code my own Java class parser and I share it in this repository.
+It took me around an hour to code my own Java class parser and I share it in this repository.  
+Let us run it and parse the header:
 
+```shell
+$ ./java_fmt.py ./a.class
+MENU
+FILE: a.class
+[H]eader
+[C]onstant pool (34)
+[Interfaces (0)
+[F]ields (0)
+[M]ethods (2)
+[A]ttributes (0)
+[Q]uit
+> H
+
+HEADER
+version_minor = 0
+major = 61
+access_flags = 33
+this_class_index (28) -->
+  tag = CONSTANT_Class
+  name_index (29) -->
+    tag = CONSTANT_Utf8
+    data = a
+super_class_index (2) -->
+  tag = CONSTANT_Class
+  name_index (4) -->
+    tag = CONSTANT_Utf8
+    data = java/lang/Object
+```
+
+That's quite interesting! We see how the constant pool is used, for instance:
+- The `this_class_index` member has a value of `28`, which points to the `27`th member of the constant pool.
+- The `27`th item in the constant pool has a tag of type `CONSTANT_Class`, which makes sense since this should be a class descriptor.
+- The class descriptor has a `name_index` with the value of `29`, thus pointing to the `28`th member of the constant pool.
+- The `28`th item in the constant pool is of type `CONSTANT_Utf8` and has the data `a` in it. UTF-8 strings are simply Pascal-strings (`length` followed by `data` with no NUL terminators).
+- Similarly, the `super_class_index` is `2` and points to item `1` in the constant pool, which is a class descriptor that has a name index that eventually points to a UTF-8 string of `java/lang/Object`.
+
+Already several ideas come to mind:
+1. How will the JVM treat a descriptor that points to a tag that does not have the type `CONSTANT_Class`? If ignored, we might reuse entries in the constant pool.
+2. Can we do an out-of-bounds in one of the indices?
+3. Can we call our class `curl`, thus reusing the (expected) `curl` string in the constant pool?
+
+Let's keep all those ideas in our minds, while we print out our methods:
+
+```shell
+METHODS
+access_flags = 1
+name_index (5) -->
+  tag = CONSTANT_Utf8
+  data = <init>
+descriptor_index (6) -->
+  tag = CONSTANT_Utf8
+  data = ()V
+attributes: [
+  attribute_name_index (30) -->
+    tag = CONSTANT_Utf8
+    data = Code
+  data = 00 01 00 01 00 00 00 05 2a b7 00 01 b1 00 00 00 00
+]
+access_flags = 9
+name_index (31) -->
+  tag = CONSTANT_Utf8
+  data = main
+descriptor_index (19) -->
+  tag = CONSTANT_Utf8
+  data = ([Ljava/lang/String;)V
+attributes: [
+  attribute_name_index (30) -->
+    tag = CONSTANT_Utf8
+    data = Code
+  data = 00 06 00 02 00 00 00 26 bb 00 07 59 06 bd 00 09 59 03 12 0b 53 59 04 12 0d 53 59 05 12 0f 53 b7 00 11 4c 2b b6 00 14 57 2b b6 00 18 57 b1 00 00 00 00
+  attribute_name_index (32) -->
+    tag = CONSTANT_Utf8
+    data = Exceptions
+  data = 00 01 00 21
+]
+```
+
+Interestingly, we have 2 methods!
+- One method is called `<init>` and gets no argument and returns `void` (this is the `()V` part). That is a constructor to our class, with very minimal code.
+- The other method is our `main` method that gets an array of strings (`[Ljava/lang/String;`) and returns nothing.
+- Our `<init>` method has one attribute called `Code` and then the bytecode (which I didn't parse here).
+- Our `main` method has a similar `Code` attribute, but also has another attribute called `Exceptions`, which probably declares the fact our method might throw exceptions.
+
+New ideas come to mind:
+1. Is the `<init>` method necessary? Also, what does its code do? Can we trim it?
+2. Can we simply omit the `Exceptions` attribute from `main`?
+3. Will our JVM be able to run `main` that does not accept any arguments?
+4. Can we move our entire logic to `<init>`?
+
+For that, we need to run some experiments.
+
+## Experimentation
 
 
