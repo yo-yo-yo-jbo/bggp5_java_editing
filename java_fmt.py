@@ -54,7 +54,7 @@ class JavaObject(object):
             if k.startswith('_'):
                 continue
             if k.endswith('_index'):
-                result.append(f'{depth_str}{colorama.Fore.WHITE}{colorama.Style.BRIGHT}{k}{colorama.Style.RESET_ALL} -->')
+                result.append(f'{depth_str}{colorama.Fore.WHITE}{colorama.Style.BRIGHT}{k}{colorama.Style.RESET_ALL} ({colorama.Fore.RED}{v}{colorama.Style.RESET_ALL}) -->')
                 other_obj = self._const_pool[v - 1]
                 other_obj._depth = self._depth + 1
                 result.append(f'{other_obj}')
