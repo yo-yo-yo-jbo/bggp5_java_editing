@@ -188,8 +188,24 @@ Exception Details:
 ```
 
 The `invoke-special` instruction is `0xb7`, and it means to run an `instance` method, which is a bit different than running `virtual` methods (which is the default behavior in Java).  
+One other idea we could do is move everything to a new method called `<clinit>`, which is the static constructor, that runs when the class gets loaded. This can even be done without any binary patching:
 
-As for patching, I didn't talk too much about the bytecode itself, but there's a good reference [here](https://en.wikipedia.org/wiki/List_of_Java_bytecode_instructions). I tried patching its first instruction to be `0xb1` (which is `return-void`) but the JVM complains about not initializing the superclass:
+```java
+public class curl {
+    static {
+        ProcessBuilder p = new ProcessBuilder("curl", "-L", "7f.uk");
+        p.inheritIO();
+        try {
+            p.start();
+        }
+        catch (Exception e) {}
+    }
+}
+```
+
+Unfortunately, this doesn't run, as the JVM refuses to run without a proper `main` method.  
+Adding a `main` method that doesn't do anything creates a larger binary, as we now have 3 methods: `<clinit>`, `<init>` an `main`, which results in a larger constant pool.  
+As for patching `<init>`, I didn't talk too much about the bytecode itself, but there's a good reference [here](https://en.wikipedia.org/wiki/List_of_Java_bytecode_instructions). I tried patching its first instruction to be `0xb1` (which is `return-void`) but the JVM complains about not initializing the superclass:
 
 ```
 Error: Unable to initialize main class curl
