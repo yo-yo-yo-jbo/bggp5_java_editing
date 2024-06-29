@@ -58,8 +58,11 @@ Compiling with `javac -g:none a.java` produces a class of `446` bytes:
 000001b0│0000 0020 0000 0004│0001 0021 0000     │... .......!..
 ```
 
-Now is the time to start trimming some unnecessary things, including some strings that might be easily trimmed (e.g. `java/lang/Exception`). This kind of forces me to dive into `class` file format!  
-Remark: I also tried using a [URLClassLoader](https://docs.oracle.com/javase/8/docs/api/java/net/URLClassLoader.html) to load further code from some short-form URL I register, but the size turned up to be too big (`457` bytes to be exact).
+Now is the time to start trimming some unnecessary things, including some strings that might be easily trimmed (e.g. `java/lang/Exception`). This kind of forces me to dive into `class` file format!
+
+### Failed ideas
+- I tried using a [URLClassLoader](https://docs.oracle.com/javase/8/docs/api/java/net/URLClassLoader.html) to load further code from some short-form URL I register, but the size turned up to be too big (`457` bytes to be exact).
+- I tried inheriting from `ProcessBuilder` to not have a direct reference to `Object` as a superclass, but it didn't work due to `ProcessBuilder` being `final`.
 
 ## The Java class format
 The Java class format is quite simple and very well documented [here](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html).  
