@@ -166,12 +166,12 @@ For that, we need to run some experiments.
 
 ## Experimentation
 Some of the easiest experiments do not involve any serious hacking:
-1. We can indeed name our class `curl`, and it saves `4` bytes in total, as `javac` repurposes the `curl` string constant and uses it twice (once for the class name, once for the string used in the code).
+1. We can indeed name our class `curl`, and it saves `4` bytes in total, as `javac` repurposes the `curl` string constant and uses it twice (once for the class name, once for the string used in the code). The total size reduces to `442` bytes.
 2. We cannot get rid of `main` method, as the JVM complains if it doesn't find the *exact* `main` method that gets an array of `String`s.
 
 Now, let's get to the harder questions:
 
-### Getting rid of the constructor
+### Can we get rid of the default constructor?
 You *can* get rid of the `<init>` method, but it'd bite you back later. Removing it completely completely results in this:
 
 ```
