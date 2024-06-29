@@ -168,5 +168,26 @@ Some of the easiest experiments do not involve any serious hacking:
 1. We can indeed name our class `curl`, and it saves `4` bytes in total, as `javac` repurposes the `curl` string constant and uses it twice (once for the class name, once for the string used in the code).
 2. We cannot get rid of `main` method, as the JVM complains if it doesn't find the *exact* `main` method that gets an array of `String`s.
 
+Now, let's get to the harder questions:
 
+### Getting rid of <init>
+You cannot get rid of `<init>` at all, and its length is the minimum length. Removing it completely completely results in this:
+
+```
+TBD
+```
+
+I didn't talk too much about the bytecode itself, but there's a good reference [here](https://en.wikipedia.org/wiki/List_of_Java_bytecode_instructions). I tried patching its first instruction to be `0xb1` (which is `return-void`) but the JVM complains about not initializing the superclass:
+
+```
+Error: Unable to initialize main class curl
+Caused by: java.lang.VerifyError: Constructor must call super() or this() before return
+Exception Details:
+  Location:
+    curl.<init>()V @0: return
+  Reason:
+    Error exists in the bytecode
+  Bytecode:
+    0000000: b1b7 0001 b1
+```
 
