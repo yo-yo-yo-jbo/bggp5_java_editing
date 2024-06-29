@@ -216,9 +216,13 @@ def do_menu(jclass):
     """
 
     # Run forever
+    is_first = True
     while True:
 
         # Show the menu
+        if not is_first:
+            print('')
+        is_first = False
         print(f'{colorama.Fore.CYAN}MENU{colorama.Style.RESET_ALL}')
         print(f'{colorama.Fore.WHITE}{colorama.Style.BRIGHT}FILE{colorama.Style.RESET_ALL}: {colorama.Fore.GREEN}{os.path.basename(jclass.file_path)}{colorama.Style.RESET_ALL}')
         print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}H{colorama.Style.RESET_ALL}]eader')
@@ -229,9 +233,19 @@ def do_menu(jclass):
         print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}A{colorama.Style.RESET_ALL}]ttributes ({colorama.Fore.LIGHTBLUE_EX}{len(jclass.attributes)}{colorama.Style.RESET_ALL})')
         print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}Q{colorama.Style.RESET_ALL}]uit')
     
-        # Get choice and potentially quit
+        # Get choice and parse number
         choice = input('> ').upper()
+        num = None
         clear_screen()
+        try:
+            if len(choice) > 1:
+                num = int(choice[1:])
+                choice = choice[0]
+        except Exception:
+            print(f'{colorama.Fore.RED}INVALID CHOICE{colorama.Style.RESET_ALL}')
+            continue
+
+        # Handle quitting
         if choice == 'Q':
             break
 
@@ -239,40 +253,31 @@ def do_menu(jclass):
         elif choice == 'H':
             print(f'{colorama.Fore.CYAN}HEADER{colorama.Style.RESET_ALL}')
             print(jclass.header)
+            continue
 
-        # Print the constant pool
-        elif choice == 'C':
-            print(f'{colorama.Fore.CYAN}CONSTANT POOL{colorama.Style.RESET_ALL}')
-            for obj in jclass.const_pool:
+        # Maps choices to lists and use it to print list items
+        choice_to_list = { 'C' : (jclass.const_pool, 'CONSTANT POOL'),
+                           'I' : (jclass.interfaces, 'INTERFACES'),
+                           'F' : (jclass.fields, 'FIELDS'),
+                           'M' : (jclass.methods, 'METHODS'),
+                           'A' : (jclass.attributes, 'ATTRIBUTES') }
+        if choice not in choice_to_list:
+            print(f'{colorama.Fore.RED}INVALID CHOICE{colorama.Style.RESET_ALL}')
+            continue
+        if num is None:
+            print(f'{colorama.Fore.CYAN}{choice_to_list[choice][1]}{colorama.Style.RESET_ALL}')
+            for obj in choice_to_list[choice][0]:
                 print(obj)
-
-        # Print interfaces
-        elif choice == 'I':
-            print(f'{colorama.Fore.CYAN}INTERFACES{colorama.Style.RESET_ALL}')
-            for obj in jclass.interfaces:
-                print(obj)
-
-        # Print fields
-        elif choice == 'F':
-            print(f'{colorama.Fore.CYAN}FIELDS{colorama.Style.RESET_ALL}')
-            for obj in jclass.fields:
-                print(obj)
-
-        # Print methods
-        elif choice == 'M':
-            print(f'{colorama.Fore.CYAN}METHODS{colorama.Style.RESET_ALL}')
-            for obj in jclass.methods:
-                print(obj)
-
-        # Print attributes
-        elif choice == 'A':
-            print(f'{colorama.Fore.CYAN}ATTRIBUTES{colorama.Style.RESET_ALL}')
-            for obj in jclass.attributes:
-                print(obj)
+            continue
+        if num <= 0 or num > len(choice_to_list[choice][0]):
+            print(f'{colorama.Fore.RED}INVALID CHOICE{colorama.Style.RESET_ALL}')
+            continue
+        print(f'{colorama.Fore.CYAN}{choice_to_list[choice][1]}{colorama.Style.RESET_ALL} ({colorama.Fore.RED}{num}{colorama.Style.RESET_ALL})')
+        print(choice_to_list[choice][0][num - 1])
+        continue
 
         # Invalid choice
-        else:
-            print(f'{colorama.Fore.RED}INVALID CHOICE{colorama.Style.RESET_ALL}')
+        print(f'{colorama.Fore.RED}INVALID CHOICE{colorama.Style.RESET_ALL}')
 
         # Print one more linebreak
         print('')
