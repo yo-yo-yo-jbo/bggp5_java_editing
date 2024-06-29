@@ -227,4 +227,23 @@ Indeed it looks like the JVM verifier validates the constructor initializes the 
 - Out-of-bounds in the constant pool is a no-go, resulting in verifier failures (if used statically) or crashes (if used in a `Code` attribute).
 
 ### Reducing Exceptions references
+One more thing left to do: our `main` method has an extra attribute called `Exceptions` and has `4` bytes.  
+The format of the `Exceptions` data is simply the number of the exceptions (2-bytes) followed by exception reference numbers (2 bytes each).  
+Our bytes are `00 01 00 20`, so we have `1` exception referencing index `0x20` (`32`), and indeed, using my tool we see:
+
+```
+CONSTANT POOL (32)
+tag = CONSTANT_Class
+name_index (33) -->
+  tag = CONSTANT_Utf8
+  data = java/lang/Exception
+```
+
+Additionally, the name `Exceptions` itself is referenced by index `31`. So, our plan is:
+- Removing entry `31` from the constant pool (the UTF-8 constant that says `Exceptions`).
+- Removing entry `32` from the constant pool (the class descriptor for `Java/lang/Exception`).
+- Removing entry `33` from the constant pool (the UTF-8 string for `Java/lang/Exception`).
+- Removing the `2`nd attribute from the `2`nd method.
+
+The effect is that it'd be as if we didn't declare `main` to `throw Exception`, which is fine for our execution.
 
