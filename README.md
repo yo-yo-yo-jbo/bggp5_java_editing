@@ -1,5 +1,5 @@
 # Binary Golf and Java classes
-Continuing with my [Binary Golf](https://binary.golf) adventure for year 5, I've decided to try and create the smallest Java class that downloads and presents the file.  
+Continuing with my [Binary Golf](https://binary.golf) adventure for year 5, I've decided to try and create the smallest Java class that downloads and presents the data downloaded from the Binary Golf website.  
 Some conclusions from my [Linux shellcode blogpost](https://github.com/yo-yo-yo-jbo/bggp5_linux_shellcode/):
 1. Running `curl` is fair game and saves a lot of file size.
 2. Short URLs are fair game, and the shortest I found was `7f.uk`.
