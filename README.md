@@ -69,7 +69,7 @@ The Java class format is quite simple and very well documented [here](https://do
 Without going into too many details, the format is quite simple:
 - Everything is Big-Endian (yikes!)
 - A simple *header* exists that has a magic value, as well as the major and minor versions.
-- Then, there's a *constant pool in the form of number of entries and then the entries themselves. Each entry has a *tag* (type) and its data, which is determined by the type. There are 14 supported types, and they aren't terrible to parse.
+- Then, there's a *constant pool* in the form of number of entries and then the entries themselves. Each entry has a *tag* (type) and its data, which is determined by the type. There are 14 supported types, and they aren't terrible to parse.
 - Then we have 3 other simple fields: the class's *access flags*, followed by an index that should point to a descriptor of the class (in the constant pool) and an index that points to the superclass.
 - Finally, we have *interfaces*, *fields*, *methods* and *attributes*. All of them are simple arrays, and most of them use indices that point to the constant pool.
 
