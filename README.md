@@ -170,14 +170,26 @@ Some of the easiest experiments do not involve any serious hacking:
 
 Now, let's get to the harder questions:
 
-### Getting rid of <init>
-You cannot get rid of `<init>` at all, and its length is the minimum length. Removing it completely completely results in this:
+### Getting rid of the constructor
+You *can* get rid of the `<init>` method, but it'd bite you back later. Removing it completely completely results in this:
 
 ```
-TBD
+Error: Unable to initialize main class curl
+Caused by: java.lang.VerifyError: Bad invokespecial instruction: current class isn't assignable to reference class.
+Exception Details:
+  Location:
+    curl.main([Ljava/lang/String;)V @23: invokespecial
+  Reason:
+    Error exists in the bytecode
+  Bytecode:
+    0000000: bb00 0759 06bd 0009 5903 120b 5359 0412
+    0000010: 0d53 5905 120f 53b7 0011 4c2b b600 1457
+    0000020: 2bb6 0018 57b1
 ```
 
-I didn't talk too much about the bytecode itself, but there's a good reference [here](https://en.wikipedia.org/wiki/List_of_Java_bytecode_instructions). I tried patching its first instruction to be `0xb1` (which is `return-void`) but the JVM complains about not initializing the superclass:
+The `invoke-special` instruction is `0xb7`, and it means to run an `instance` method, which is a bit different than running `virtual` methods (which is the default behavior in Java).  
+
+As for patching, I didn't talk too much about the bytecode itself, but there's a good reference [here](https://en.wikipedia.org/wiki/List_of_Java_bytecode_instructions). I tried patching its first instruction to be `0xb1` (which is `return-void`) but the JVM complains about not initializing the superclass:
 
 ```
 Error: Unable to initialize main class curl
@@ -191,3 +203,4 @@ Exception Details:
     0000000: b1b7 0001 b1
 ```
 
+Indeed it looks like the JVM verifier validates the constructor initializes the superclass. Since the total code length of `<init>` is 5 bytes, it cannot be improved further.
