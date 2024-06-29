@@ -164,5 +164,9 @@ New ideas come to mind:
 For that, we need to run some experiments.
 
 ## Experimentation
+Some of the easiest experiments do not involve any serious hacking:
+1. We can indeed name our class `curl`, and it saves `4` bytes in total, as `javac` repurposes the `curl` string constant and uses it twice (once for the class name, once for the string used in the code).
+2. We cannot get rid of `main` method, as the JVM complains if it doesn't find the *exact* `main` method that gets an array of `String`s.
+
 
 
