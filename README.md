@@ -59,3 +59,16 @@ Compiling with `javac -g:none a.java` produces a class of `446` bytes:
 ```
 
 Now is the time to start trimming some unnecessary things, including some strings that might be easily trimmed (e.g. `java/lang/Exception`). This kind of forces me to dive into `class` file format!
+
+## The Java class format
+The Java class format is quite simple and very well documented [here](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html).  
+Without going into too many details, the format is quite simple:
+- A simple *header* exists that has a magic value, as well as the major and minor versions.
+- Then, there's a *constant pool in the form of number of entries and then the entries themselves. Each entry has a *tag* (type) and its data, which is determined by the type. There are 14 supported types, and they aren't terrible to parse.
+- Then we have 3 other simple fields: the class's *access flags*, followed by an index that should point to a descriptor of the class (in the constant pool) and an index that points to the superclass.
+- Finally, we have *interfaces*, *fields*, *methods* and *attributes*. All of them are simple arrays, and most of them use indices that point to the constant pool.
+
+It took me around an hour to code my own Java class parser and I share it in this repository.
+
+
+
