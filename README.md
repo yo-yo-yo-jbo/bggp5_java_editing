@@ -221,3 +221,10 @@ Exception Details:
 ```
 
 Indeed it looks like the JVM verifier validates the constructor initializes the superclass. Since the total code length of `<init>` is 5 bytes, it cannot be improved further.
+
+### Other experiments
+- I've tried checking if the `tag` is really used or we can abuse a type confusion. The JVM I have strongly checks the `tag`.
+- Out-of-bounds in the constant pool is a no-go, resulting in verifier failures (if used statically) or crashes (if used in a `Code` attribute).
+
+### Reducing Exceptions references
+
