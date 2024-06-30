@@ -64,6 +64,7 @@ Now is the time to start trimming some unnecessary things, including some string
 - I tried using a [URLClassLoader](https://docs.oracle.com/javase/8/docs/api/java/net/URLClassLoader.html) to load further code from some short-form URL I register, but the size turned up to be too big (`457` bytes to be exact).
 - I tried inheriting from `ProcessBuilder` to not have a direct reference to `Object` as a superclass, but it didn't work due to `ProcessBuilder` being `final`.
 - I thought of incorporating `native` code, but could not find easy ways in `libc.so.6` to make it appear as if we have a JNI method that'd not crash the process.
+- At a certain point I thought that the `-L` flag should be omitted at the price of using the entire URL for the Binary Golf download target, but it turns out the short URL with the `-L` flag actually save 5 bytes, so in total you should still use the short URL even at the price of one more constant pool entry.
 
 ## The Java class format
 The Java class format is quite simple and very well documented [here](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html).  
