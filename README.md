@@ -21,7 +21,7 @@ public class a {
 
 Remarks:
 - Note the class name is `a` (as the class name is preserved in the Java class).
-- We need to decalre `Exception` might be thrown (due to `p.start()`.
+- We need to declare `Exception` might be thrown (due to `p.start()`.
 - I had to call `p.inheritIO()` for the newly created process to use the current process's `stdout`.
 - Normally you're supposed to wait until the process finishes, but I found it okay to just run it - the Java process ends but the new process still finishes a bit later, which is okay according to the rules of the game I guess.
 
