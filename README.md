@@ -252,7 +252,7 @@ Additionally, the name `Exceptions` itself is referenced by index `31`. So, our 
 - Removing the `2`nd attribute from the `2`nd method.
 
 The effect is that it'd be as if we didn't declare `main` to `throw Exception`, which is fine for our execution.  
-I've done that work manually with some binary editing, and ended up with the following `394` bytes `curl.class` file:
+I've done that work manually with some binary editing, and ended up with the following `390` bytes `curl.class` file:
 
 ```
 00000000│cafe babe 0000 003d│001f 0a00 0200 0307│.......=........
@@ -276,10 +276,10 @@ I've done that work manually with some binary editing, and ended up with the fol
 00000120│1c00 0200 0000 0000│0200 0100 0500 0600│................
 00000130│0100 1d00 0000 1100│0100 0100 0000 052a│...............*
 00000140│b700 01b1 0000 0000│0009 001e 0013 0001│................
-00000150│001d 0000 0032 0006│0002 0000 0026 bb00│.....2.......&..
+00000150│001d 0000 002e 0006│0001 0000 0022 bb00│............."..
 00000160│0759 06bd 0009 5903│120b 5359 0412 0d53│.Y....Y...SY...S
-00000170│5905 120f 53b7 0011│4c2b b600 1457 2bb6│Y...S...L+...W+.
-00000180│0018 57b1 0000 0000│0000               │..W.......
+00000170│5905 120f 53b7 0011│b600 14b6 0018 57b1│Y...S.........W.
+00000180│0000 0000 0000     │                   │......
 ```
 
 And indeed:
