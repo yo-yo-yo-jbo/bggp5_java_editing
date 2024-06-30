@@ -317,19 +317,8 @@ attributes: [
   attribute_name_index (29) -->
     tag = CONSTANT_Utf8
     data = Code
-  data = 00 06 00 02 00 00 00 26 bb 00 07 59 06 bd 00 09 59 03 12 0b 53 59 04 12 0d 53 59 05 12 0f 53 b7 00 11 4c 2b b6 00 14 57 2b b6 00 18 57 b1 00 00 00 00
+  data = 00 06 00 01 00 00 00 22 bb 00 07 59 06 bd 00 09 59 03 12 0b 53 59 04 12 0d 53 59 05 12 0f 53 b7 00 11 b6 00 14 b6 00 18 57 b1 00 00 00 00
 ]
-
-MENU
-FILE: curl.class
-[H]eader
-[C]onstant pool (30)
-[D]escriptor for the class
-[Interfaces (0)
-[F]ields (0)
-[M]ethods (2)
-[A]ttributes (0)
-[Q]uit
 ```
 
 ## Summary
