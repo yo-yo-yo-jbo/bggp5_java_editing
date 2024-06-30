@@ -74,7 +74,7 @@ Without going into too many details, the format is quite simple:
 - Then we have 3 other simple fields: the class's *access flags*, followed by an index that should point to a descriptor of the class (in the constant pool) and an index that points to the superclass.
 - Finally, we have *interfaces*, *fields*, *methods* and *attributes*. All of them are simple arrays, and most of them use indices that point to the constant pool.
 
-It took me around an hour to code my own Java class parser and I share it in this repository.  
+It took me around an hour to code my own Java class parser and I share it in this repository (see [java_fmt.py](java_fmt.py)).  
 Let us run it and parse the header:
 
 ```shell
@@ -83,6 +83,7 @@ MENU
 FILE: a.class
 [H]eader
 [C]onstant pool (34)
+[D]escriptor for the class
 [Interfaces (0)
 [F]ields (0)
 [M]ethods (2)
@@ -285,6 +286,49 @@ And indeed:
 ```shell
 jbo@McJbo % java curl
 jbo@McJbo % Another #BGGP5 download!! @binarygolf https://binary.golf
+```
+
+When running with my tool, it looks like this:
+
+```
+METHODS
+access_flags = 1
+name_index (5) -->
+  tag = CONSTANT_Utf8
+  data = <init>
+descriptor_index (6) -->
+  tag = CONSTANT_Utf8
+  data = ()V
+attributes: [
+  attribute_name_index (29) -->
+    tag = CONSTANT_Utf8
+    data = Code
+  data = 00 01 00 01 00 00 00 05 2a b7 00 01 b1 00 00 00 00
+]
+access_flags = 9
+name_index (30) -->
+  tag = CONSTANT_Utf8
+  data = main
+descriptor_index (19) -->
+  tag = CONSTANT_Utf8
+  data = ([Ljava/lang/String;)V
+attributes: [
+  attribute_name_index (29) -->
+    tag = CONSTANT_Utf8
+    data = Code
+  data = 00 06 00 02 00 00 00 26 bb 00 07 59 06 bd 00 09 59 03 12 0b 53 59 04 12 0d 53 59 05 12 0f 53 b7 00 11 4c 2b b6 00 14 57 2b b6 00 18 57 b1 00 00 00 00
+]
+
+MENU
+FILE: curl.class
+[H]eader
+[C]onstant pool (30)
+[D]escriptor for the class
+[Interfaces (0)
+[F]ields (0)
+[M]ethods (2)
+[A]ttributes (0)
+[Q]uit
 ```
 
 ## Summary
