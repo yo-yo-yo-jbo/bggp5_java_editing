@@ -65,6 +65,7 @@ Now is the time to start trimming some unnecessary things, including some string
 - I tried inheriting from `ProcessBuilder` to not have a direct reference to `Object` as a superclass, but it didn't work due to `ProcessBuilder` being `final`.
 - I thought of incorporating `native` code, but could not find easy ways in `libc.so.6` to make it appear as if we have a JNI method that'd not crash the process.
 - At a certain point I thought that the `-L` flag should be omitted at the price of using the entire URL for the Binary Golf download target, but it turns out the short URL with the `-L` flag actually save 5 bytes, so in total you should still use the short URL even at the price of one more constant pool entry.
+- The documentation states you could leave a value of `0` (which is kind of `null`) for the index that represents the descriptor of the superclass instead of referring to `java.lang.Object`. That could save a lot of room, but unfortunately the JVM verifier validates this and refuses to run the code.
 
 ## The Java class format
 The Java class format is quite simple and very well documented [here](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html).  
