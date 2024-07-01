@@ -331,6 +331,41 @@ Apparently, we can, saving the `<init>` method and all its references in the con
 00000150│b100 0000 0000 00  │                   │.......
 ```
 
+### Getting rid of Object inheritence
+Lastly, our class currently inherits from `Object`, which takes the string `java/lang/Object` in the constant pool.  
+I noticed that isn't referenced by anything besides our superclass descriptor. My first thought was to use a different class descriptor, but:
+- While the `ProcessBuilder` and `String` classes exist in our constant pool, they are both `final` so the verifier fails for inheriting from them.
+- I cannot self-inherit, even though I am an `abstract` class - the verifier fails on these kind of recursive definitions.
+
+I didn't find any other strings that would be usable classes to inherit from, so my goal was to shorten `java/lang/Object` to a shorter class.  
+Primitive types or their arrays would be ideal, but they are not available for inheritence, so I ended up checking all builtin classes and find the one with the shortest name: `java/io/File` and others have a total length of `12` characters.
+So, replacing that string constant from `java/lang/Object` to `java/io/File` reduces my file size further to `339` bytes:
+
+```
+00000000│cafe babe 0000 003d│001c 0100 046d 6169│.......=.....mai
+00000010│6e07 0004 0100 0443│6f64 6501 000c 6a61│n......Code...ja
+00000020│7661 2f69 6f2f 4669│6c65 0100 063c 696e│va/io/File...<in
+00000030│6974 3e07 000c 0700│0801 0018 6a61 7661│it>.........java
+00000040│2f6c 616e 672f 5072│6f63 6573 7342 7569│/lang/ProcessBui
+00000050│6c64 6572 0700 0a01│0010 6a61 7661 2f6c│lder......java/l
+00000060│616e 672f 5374 7269│6e67 0800 0c01 0004│ang/String......
+00000070│6375 726c 0800 0e01│0002 2d4c 0800 1001│curl......-L....
+00000080│0005 3766 2e75 6b0a│0007 0012 0c00 0500│..7f.uk.........
+00000090│1301 0016 285b 4c6a│6176 612f 6c61 6e67│....([Ljava/lang
+000000a0│2f53 7472 696e 673b│2956 0a00 0700 150c│/String;)V......
+000000b0│0016 0017 0100 0969│6e68 6572 6974 494f│.......inheritIO
+000000c0│0100 1c28 294c 6a61│7661 2f6c 616e 672f│...()Ljava/lang/
+000000d0│5072 6f63 6573 7342│7569 6c64 6572 3b0a│ProcessBuilder;.
+000000e0│0007 0019 0c00 1a00│1b01 0005 7374 6172│............star
+000000f0│7401 0015 2829 4c6a│6176 612f 6c61 6e67│t...()Ljava/lang
+00000100│2f50 726f 6365 7373│3b04 2100 0600 0200│/Process;.!.....
+00000110│0000 0000 0100 0900│0100 1300 0100 0300│................
+00000120│0000 2e00 0600 0100│0000 22bb 0007 5906│.........."...Y.
+00000130│bd00 0959 0312 0b53│5904 120d 5359 0512│...Y...SY...SY..
+00000140│0f53 b700 11b6 0014│b600 1857 b100 0000│.S.........W....
+00000150│0000 00            │                   │...
+```
+
 ## Summary
 Binary Golf is super fun and makes you learn new things every day!  
 I really enjoy the challenge and considering playing some more, maybe with an Android this time.
