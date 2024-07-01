@@ -448,7 +448,7 @@ It doesn't seem there's a lot of space for optimizations, *besides one thing* - 
 
 ## Summary
 Binary Golf is super fun and makes you learn new things every day!  
-I really enjoy the challenge and considering playing some more, maybe with an Android this time.
+I really enjoy the challenge and considering playing some more, maybe with an Android App this time.
 
 Stay tuned!
 
