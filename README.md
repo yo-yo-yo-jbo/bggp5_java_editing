@@ -447,7 +447,14 @@ It doesn't seem there's a lot of space for optimizations, *besides one thing* - 
 ```
 
 ## Summary
-Binary Golf is super fun and makes you learn new things every day!  
+All in all, we found good ways of minimizing the class:
+1. Implement our class `abstract`, thus getting rid of `<init>` completely.
+2. Inheriting from a class different than `Object` - shortest name I could find was `java/io/File`.
+3. Getting rid of `Exception` handling.
+4. Not cleaning up the stack.
+5. Re-using strings (e.g. calling your class `Code` or `curl` in our case).
+
+I gotta say, Binary Golf is super fun and makes you learn new things every day!  
 I really enjoy the challenge and considering playing some more, maybe with an Android App this time.
 
 Stay tuned!
