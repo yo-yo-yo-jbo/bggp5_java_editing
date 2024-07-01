@@ -413,7 +413,7 @@ Let's follow line by line:
 14. We push the value `2` to the stack.
 15. We push a reference to the string `7f.uk` to the stack.
 16. We store the value `7f.uk` at index `2` to the `String` array, popping all 3 lastly pushed items from the stack, similarly to line 8 and line 12.
-17. We call the `StringBuilder`'s constructor (`<init>`) that gets an array of `String`s and the object reference from the stack.
+17. We call the `StringBuilder`'s constructor (`<init>`) that gets an array of `String`s and the object reference from the stack (unlike what Wikipedia says, it does *not* put anything back on the stack).
 18. We call `inheritIO` virtual method on the `ProcessBuilder` instance - the result is pushed back. Since the result of `inheritIO` is exactly the same object instance, nothing is changed on the stack.
 19. We call `start` virtual method on the `ProcessBuilder` instance. The resulting `Process` is pushed back to the stack.
 20. We call `pop` to remove the returned `Process` instance and basically "ignore" it while cleaning up the stack.
