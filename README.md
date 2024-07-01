@@ -322,6 +322,45 @@ attributes: [
 ]
 ```
 
+### Abusing abstract classes
+Surprisingly, because `main` is a `static` method, I discovered you could have an `abstract` class that'd still run!
+
+```java
+public abstract class curl {
+    public static void main(String[] x) throws Exception {
+        (new ProcessBuilder("curl", "-L", "7f.uk")).inheritIO().start();
+    }
+}
+```
+
+This runs well, but still generates an `<init>` method... But because the class is `abstract`, it should never be called... Can we omit it?  
+Apparently, we can, saving the `<init>` method and all its references in the constant pool (there are `3` of those), as well as removing the `Exception` handling. After patching, I was able to reduce the class to a size of `343` bytes only!
+
+```
+00000000│cafe babe 0000 003d│001c 0100 046d 6169│.......=.....mai
+00000010│6e07 0004 0100 0443│6f64 6501 0010 6a61│n......Code...ja
+00000020│7661 2f6c 616e 672f│4f62 6a65 6374 0100│va/lang/Object..
+00000030│063c 696e 6974 3e07│000c 0700 0801 0018│.<init>.........
+00000040│6a61 7661 2f6c 616e│672f 5072 6f63 6573│java/lang/Proces
+00000050│7342 7569 6c64 6572│0700 0a01 0010 6a61│sBuilder......ja
+00000060│7661 2f6c 616e 672f│5374 7269 6e67 0800│va/lang/String..
+00000070│0c01 0004 6375 726c│0800 0e01 0002 2d4c│....curl......-L
+00000080│0800 1001 0005 3766│2e75 6b0a 0007 0012│......7f.uk.....
+00000090│0c00 0500 1301 0016│285b 4c6a 6176 612f│........([Ljava/
+000000a0│6c61 6e67 2f53 7472│696e 673b 2956 0a00│lang/String;)V..
+000000b0│0700 150c 0016 0017│0100 0969 6e68 6572│...........inher
+000000c0│6974 494f 0100 1c28│294c 6a61 7661 2f6c│itIO...()Ljava/l
+000000d0│616e 672f 5072 6f63│6573 7342 7569 6c64│ang/ProcessBuild
+000000e0│6572 3b0a 0007 0019│0c00 1a00 1b01 0005│er;.............
+000000f0│7374 6172 7401 0015│2829 4c6a 6176 612f│start...()Ljava/
+00000100│6c61 6e67 2f50 726f│6365 7373 3b04 2100│lang/Process;.!.
+00000110│0600 0200 0000 0000│0100 0900 0100 1300│................
+00000120│0100 0300 0000 2e00│0600 0100 0000 22bb│..............".
+00000130│0007 5906 bd00 0959│0312 0b53 5904 120d│..Y....Y...SY...
+00000140│5359 0512 0f53 b700│11b6 0014 b600 1857│SY...S.........W
+00000150│b100 0000 0000 00  │                   │.......
+```
+
 ## Summary
 Binary Golf is super fun and makes you learn new things every day!  
 I really enjoy the challenge and considering playing some more, maybe with an Android this time.
