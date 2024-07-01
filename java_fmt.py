@@ -38,7 +38,7 @@ class JavaObject(object):
 
         # Keep a reference to the constant pool
         self._const_pool = const_pool
-        
+
         # Used for pretty-printing
         self._depth = 0
 
@@ -51,16 +51,19 @@ class JavaObject(object):
         """
 
         # Return a reprenting string
-        prefix = '  ' * self._depth
+        prefix = ('%.8x' % (self._start_offset,)) + ' ' + ('  ' * self._depth)
         result = []
         for k, v in self.__dict__.items():
             if k.startswith('_'):
                 continue
             if k.endswith('_index'):
                 result.append(f'{prefix}{colorama.Fore.WHITE}{colorama.Style.BRIGHT}{k}{colorama.Style.RESET_ALL} ({colorama.Fore.RED}{v}{colorama.Style.RESET_ALL}) -->')
-                other_obj = self._const_pool[v - 1]
-                other_obj._depth = self._depth + 1
-                result.append(f'{other_obj}')
+                if v <= 0 or v > len(self._const_pool):
+                    result.append(f'{prefix}{colorama.Fore.RED}{colorama.Style.BRIGHT}OUT OF BOUNDS{colorama.Style.RESET_ALL}')
+                else:
+                    other_obj = self._const_pool[v - 1]
+                    other_obj._depth = self._depth + 1
+                    result.append(f'{other_obj}')
             elif isinstance(v, list):
                 result.append(f'{prefix}{colorama.Fore.WHITE}{colorama.Style.BRIGHT}{k}{colorama.Style.RESET_ALL}: [')
                 for other_obj in v:
@@ -117,7 +120,7 @@ class JavaClass(object):
             self.header.magic, self.header.version_minor, self.header.major, const_pool_count = JavaClass._read_bytes_from_fp(fp, '>LHHH')
             assert self.header.magic == 0xCAFEBABE, Exception(f'Invalid header magic {hdr_magic}')
             assert const_pool_count > 0, Exception(f'Invalid constant pool count {const_pool_count}')
-            
+
             # Parse the constasnt pool
             for index in range(const_pool_count - 1):
 
@@ -185,6 +188,9 @@ class JavaClass(object):
             # Parse attributes
             self.attributes = self._parse_attributes(fp)
 
+            # Save the total file size
+            self._size = fp.tell()
+
     def _parse_attributes(self, fp):
         """
             Parses attributes.
@@ -229,7 +235,7 @@ def do_menu(jclass):
             print('')
         is_first = False
         print(f'{colorama.Fore.CYAN}MENU{colorama.Style.RESET_ALL}')
-        print(f'{colorama.Fore.WHITE}{colorama.Style.BRIGHT}FILE{colorama.Style.RESET_ALL}: {colorama.Fore.GREEN}{os.path.basename(jclass.file_path)}{colorama.Style.RESET_ALL}')
+        print(f'{colorama.Fore.WHITE}{colorama.Style.BRIGHT}FILE{colorama.Style.RESET_ALL}: {colorama.Fore.GREEN}{os.path.basename(jclass.file_path)}{colorama.Style.RESET_ALL} ({colorama.Fore.RED}{jclass._size}{colorama.Style.RESET_ALL} bytes)')
         print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}H{colorama.Style.RESET_ALL}]eader')
         print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}C{colorama.Style.RESET_ALL}]onstant pool ({colorama.Fore.LIGHTBLUE_EX}{len(jclass.const_pool)}{colorama.Style.RESET_ALL})')
         print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}D{colorama.Style.RESET_ALL}]escriptor for the class')
@@ -238,7 +244,7 @@ def do_menu(jclass):
         print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}M{colorama.Style.RESET_ALL}]ethods ({colorama.Fore.LIGHTBLUE_EX}{len(jclass.methods)}{colorama.Style.RESET_ALL})')
         print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}A{colorama.Style.RESET_ALL}]ttributes ({colorama.Fore.LIGHTBLUE_EX}{len(jclass.attributes)}{colorama.Style.RESET_ALL})')
         print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}Q{colorama.Style.RESET_ALL}]uit')
-    
+
         # Get choice and parse number
         choice = input('> ').upper()
         num = None
