@@ -366,6 +366,59 @@ So, replacing that string constant from `java/lang/Object` to `java/io/File` red
 00000150│0000 00            │                   │...
 ```
 
+### Code optimizations
+Now we have only one method - our `main` method. I didn't add the code parsing to my tool, but it's quite easy to do it manually, especially for such short code.  
+I am not ashamed to say I used the [Wikipedia page](https://en.wikipedia.org/wiki/List_of_Java_bytecode_instructions) for the Java bytecode instructions.  
+The JVM is basically a mix of stack and register machine, so following the instructions is quite easy. Note this is *not* the stack used by the CPU, it's the JVM stack that is implemented 100% in software.  
+Anyway, my current code looks like this (annotations were done by me):
+
+```assembly
+bb 00 07        new             java/lang/ProcessBuilder (C7)
+59              dup
+06              iconst_3
+bd 00 09        anewarray       java/lang/String (C9)
+59              dup
+03              iconst_0
+12 0b           ldc             "curl" (C11)
+53              aastore
+59              dup
+04              iconst_1
+12 0d           ldc             "-L" C(13)
+53              aastore
+59              dup
+05              iconst_2
+12 0f           ldc             "7f.uk" (C15)
+53              aastore
+b7 00 11        invokespecial    java/lang/ProcessBuilder::<init>([Ljava/lang/String;)V (C17)
+b6 00 14        invokevirtual    java/lang/ProcessBuilder::inheritIO()Ljava/lang/ProcessBuilder; (C20)
+b6 00 18        invokevirtual    java/lang/ProcessBuilder::start()Ljava/lang/Process; (C24)
+57              pop
+b1              return
+```
+
+Let's follow line by line:
+1. We create a new `ProcessBuilder`, which is quite necessary for our execution. Note that this allocates that object (but does not initialize it yet!) and pushes it to the stack.
+2. We duplicate the value in the stack - we now have two references to the same `ProcessBuilder` instance.
+3. We push the constant `3` to the stack.
+4. We create a new array of type `String`, with a size of `3` (since `3` was pushed to the stack). The `3` value is popped from the stack and the new array is pushed.
+5. We duplicate the last value in the stack, so we now have two references to the `String` array in the stack.
+6. We push the value `0` to the stack.
+7. We push a reference to the string `curl` to the stack.
+8. We store the value `curl` at index `0` to the `String` array - all of those 3 values were popped from the stack and nothing was pushed. That explains the `dup` in line `5` - otherwise we'd lose the reference to the `String` array! Our current stack contains two references to the allocated `ProcessBuilder` followed by a reference to the `String` array, which is in the top of the stack.
+9. We duplicate the `String` array reference on the stack, similarly to what we did before.
+10. We push the value `1` to the stack.
+11. We push a reference to the string `-L` to the stack.
+12. We store the value `-L` at index `1` to the `String` array, popping all 3 lastly pushed items from the stack, similarly to line 8.
+13. We duplicate the `String` array reference on the stack, similarly to what we did before.
+14. We push the value `2` to the stack.
+15. We push a reference to the string `7f.uk` to the stack.
+16. We store the value `7f.uk` at index `2` to the `String` array, popping all 3 lastly pushed items from the stack, similarly to line 8 and line 12.
+17. We call the `StringBuilder`'s constructor (`<init>`) that gets an array of `String`s and the object reference from the stack.
+18. We call `inheritIO` virtual method on the `ProcessBuilder` instance - the result is pushed back. Since the result of `inheritIO` is exactly the same object instance, nothing is changed on the stack.
+19. We call `start` virtual method on the `ProcessBuilder` instance. The resulting `Process` is pushed back to the stack.
+20. We call `pop` to remove the returned `Process` instance and basically "ignore" it while cleaning up the stack.
+21. We `return` from the method.
+
 ## Summary
 Binary Golf is super fun and makes you learn new things every day!  
 I really enjoy the challenge and considering playing some more, maybe with an Android this time.
