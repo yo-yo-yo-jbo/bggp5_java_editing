@@ -253,37 +253,7 @@ Additionally, the name `Exceptions` itself is referenced by index `31`. So, our 
 - Removing the `2`nd attribute from the `2`nd method.
 
 The effect is that it'd be as if we didn't declare `main` to `throw Exception`, which is fine for our execution.  
-I've done that work manually with some binary editing, and ended up with the following `390` bytes `curl.class` file:
-
-```
-00000000│cafe babe 0000 003d│001f 0a00 0200 0307│.......=........
-00000010│0004 0c00 0500 0601│0010 6a61 7661 2f6c│..........java/l
-00000020│616e 672f 4f62 6a65│6374 0100 063c 696e│ang/Object...<in
-00000030│6974 3e01 0003 2829│5607 0008 0100 186a│it>...()V......j
-00000040│6176 612f 6c61 6e67│2f50 726f 6365 7373│ava/lang/Process
-00000050│4275 696c 6465 7207│000a 0100 106a 6176│Builder......jav
-00000060│612f 6c61 6e67 2f53│7472 696e 6708 000c│a/lang/String...
-00000070│0100 0463 7572 6c08│000e 0100 022d 4c08│...curl......-L.
-00000080│0010 0100 0537 662e│756b 0a00 0700 120c│.....7f.uk......
-00000090│0005 0013 0100 1628│5b4c 6a61 7661 2f6c│.......([Ljava/l
-000000a0│616e 672f 5374 7269│6e67 3b29 560a 0007│ang/String;)V...
-000000b0│0015 0c00 1600 1701│0009 696e 6865 7269│..........inheri
-000000c0│7449 4f01 001c 2829│4c6a 6176 612f 6c61│tIO...()Ljava/la
-000000d0│6e67 2f50 726f 6365│7373 4275 696c 6465│ng/ProcessBuilde
-000000e0│723b 0a00 0700 190c│001a 001b 0100 0573│r;.............s
-000000f0│7461 7274 0100 1528│294c 6a61 7661 2f6c│tart...()Ljava/l
-00000100│616e 672f 5072 6f63│6573 733b 0700 0c01│ang/Process;....
-00000110│0004 436f 6465 0100│046d 6169 6e00 2100│..Code...main.!.
-00000120│1c00 0200 0000 0000│0200 0100 0500 0600│................
-00000130│0100 1d00 0000 1100│0100 0100 0000 052a│...............*
-00000140│b700 01b1 0000 0000│0009 001e 0013 0001│................
-00000150│001d 0000 002e 0006│0001 0000 0022 bb00│............."..
-00000160│0759 06bd 0009 5903│120b 5359 0412 0d53│.Y....Y...SY...S
-00000170│5905 120f 53b7 0011│b600 14b6 0018 57b1│Y...S.........W.
-00000180│0000 0000 0000     │                   │......
-```
-
-And indeed:
+I've done that work manually with some binary editing, and ended up with the following `390` bytes `curl.class` file... And indeed:
 
 ```shell
 jbo@McJbo % java curl
@@ -322,7 +292,7 @@ attributes: [
 ]
 ```
 
-### Abusing abstract classes
+### Abusing abstract classes and finally getting rid of the constructor
 Surprisingly, because `main` is a `static` method, I discovered you could have an `abstract` class that'd still run!
 
 ```java
