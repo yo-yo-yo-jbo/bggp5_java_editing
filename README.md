@@ -446,6 +446,56 @@ It doesn't seem there's a lot of space for optimizations, *besides one thing* - 
 00000150│0000               │                   │..
 ```
 
+## Update - less code with a terminal trick
+I've decided to examine the `Runtime.getRuntime().exec()` option - until this point it was not appealing due to the need to divert the standard output which still requires `ProcessBuilder`.  
+However, the option became more appealing mostly due to `Runtime` not being `final` - that means my class could inherit from `Runtime` - as long as I can find a trick to divert the standard output.  
+So, the challenges I am facing are:
+1. As I mentioned, even if your class is `abstract` - the compiler would still try to create a constructor (`<init>`) - and even if you create one yourself, the compiler would make sure to call `super()` on it - and there's no constructor for `Runtime` that gets 0 arguments. I solved that by inheriting from `Object` and patching the class later.
+2. Diverting the standard output. I ended up doing a weird trick: `sh -c "curl 7f.uk>/dev/tty` solved the problem - which means my solution wouldn't work on Windows, but I think it's still a cool idea.
+3. I still have to remove the `Exception` handling later as `Runtime.exec()` throws.
+
+I've decided to call my class `Code`, which would still re-use the mandatory `Code` string. My base code was this:
+
+```java
+public abstract class Code {
+    public static void main(String[] args) throws Exception {
+        Runtime.getRuntime().exec(new String[] {"sh", "-c", "curl -L 7f.uk>/dev/tty"});
+    }
+}
+```
+
+I've applied all we learned:
+1. Removing `Exception` handling in the `main` method's second attribute (called `Exceptions`).
+2. Getting rid of `<init>`.
+3. Inheriting from `Runtime` rather than `Object`.
+4. Removing all unnecessary entries from the constant pool.
+5. Removing the last `pop` instruction from our bytecode.
+
+And - success! My class is now only `314` bytes long, and works well!
+
+```
+00000000│cafe babe 0000 003d│0017 0a00 0200 0307│.......=........
+00000010│0004 0c00 0500 0601│0011 6a61 7661 2f6c│..........java/l
+00000020│616e 672f 5275 6e74│696d 6501 000a 6765│ang/Runtime...ge
+00000030│7452 756e 7469 6d65│0100 1528 294c 6a61│tRuntime...()Lja
+00000040│7661 2f6c 616e 672f│5275 6e74 696d 653b│va/lang/Runtime;
+00000050│0700 0801 0010 6a61│7661 2f6c 616e 672f│......java/lang/
+00000060│5374 7269 6e67 0800│0a01 0002 7368 0800│String......sh..
+00000070│0c01 0002 2d63 0800│0e01 0016 6375 726c│....-c......curl
+00000080│202d 4c20 3766 2e75│6b3e 2f64 6576 2f74│ -L 7f.uk>/dev/t
+00000090│7479 0a00 0200 100c│0011 0012 0100 0465│ty.............e
+000000a0│7865 6301 0028 285b│4c6a 6176 612f 6c61│xec..(([Ljava/la
+000000b0│6e67 2f53 7472 696e│673b 294c 6a61 7661│ng/String;)Ljava
+000000c0│2f6c 616e 672f 5072│6f63 6573 733b 0700│/lang/Process;..
+000000d0│1401 0004 436f 6465│0100 046d 6169 6e01│....Code...main.
+000000e0│0016 285b 4c6a 6176│612f 6c61 6e67 2f53│..([Ljava/lang/S
+000000f0│7472 696e 673b 2956│0421 0013 0002 0000│tring;)V.!......
+00000100│0000 0001 0009 0015│0016 0001 0014 0000│................
+00000110│0026 0005 0001 0000│001a b800 0106 bd00│.&..............
+00000120│0759 0312 0953 5904│120b 5359 0512 0d53│.Y...SY...SY...S
+00000130│b600 0fb1 0000 0000│0000               │..........
+```
+
 ## Summary
 All in all, we found good ways of minimizing the class:
 1. Implement our class `abstract`, thus getting rid of `<init>` completely.
