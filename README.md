@@ -513,7 +513,7 @@ Alas, it'd get split by Java, so the equivalent is this:
 Runtime.getRuntime.exec(new String[5] { "sh", "-c", "curl", "-L", "7f.uk>/dev/tty" });
 ```
 
-This isn't good - I need to work around that. Well, the trick that I found is pretty neat - I use the shell's variable expansion (which means I have to use `bash` and not `sh`) to get an existing environment variable with a space in it. Luckily, `$IFS` is literally the variable that I need - it contains all the token-splitters for the commandline.  
+This isn't good - I need to work around that. Well, the trick that I found is pretty neat - I use the shell's [parameter expansion](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html) (which means I have to use `bash` and not `sh`) to get an existing environment variable with a space in it. Luckily, `$IFS` is literally the variable that I need - it contains all the token-splitters for the commandline.  
 Therefore, my goal is running this:
 
 ```java
