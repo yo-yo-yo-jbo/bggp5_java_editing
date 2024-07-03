@@ -1,4 +1,4 @@
-# Binary Golf and Java classes
+8# Binary Golf and Java classes
 Continuing with my [Binary Golf](https://binary.golf) adventure for year 5, I've decided to try and create the smallest Java class that downloads and presents the data downloaded from the Binary Golf website.  
 Some conclusions from my [Linux shellcode blogpost](https://github.com/yo-yo-yo-jbo/bggp5_linux_shellcode/):
 1. Running `curl` is fair game and saves a lot of file size.
@@ -501,7 +501,7 @@ And - success! My class is now only `314` bytes long, and works well!
 ## Summary
 All in all, we found good ways of minimizing the class:
 1. Implement our class `abstract`, thus getting rid of `<init>` completely.
-2. Inheriting from a class different than `Object` - shortest name I could find was `java/io/File`.
+2. Inheriting from a class different than `Object` - shortest name I could find was `java/io/File` but in the case of `Runtime` I could reuse `Runtime` as a superclass.
 3. Getting rid of `Exception` handling.
 4. Not cleaning up the stack.
 5. Re-using strings (e.g. calling your class `Code` or `curl` in our case).
