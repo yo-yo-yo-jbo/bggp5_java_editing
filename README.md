@@ -501,7 +501,7 @@ And - success! My class is now only `314` bytes long, and works well!
 ## Summary
 All in all, we found good ways of minimizing the class:
 1. Implement our class `abstract`, thus getting rid of `<init>` completely.
-2. Inheriting from a class different than `Object` - shortest name I could find was `java/io/File` but in the case of `Runtime` I could reuse `Runtime` as a superclass.
+2. Inheriting from a class different than `Object` - shortest name I could find was `java/io/File` but in the case of `Runtime` I could reuse `Runtime` as a superclass, which is only possible due removing `<init>` entirely.
 3. Getting rid of `Exception` handling.
 4. Not cleaning up the stack.
 5. Re-using strings (e.g. calling your class `Code` or `curl` in our case).
