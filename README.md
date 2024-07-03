@@ -498,6 +498,61 @@ And - success! My class is now only `314` bytes long, and works well!
 00000130│b600 0fb1 0000 0000│0000               │..........
 ```
 
+### Moving to a single string
+Some of you might wonder why I haven't used th `exec` method that gets a single string. Well, the reason is that I didn't use it is how Java's implementation works.  
+You see, `exec(String)` is a convenience method that would internally just split the string to whitespaces and feed it in an array. Note that I still need to use `>/dev/tty`, so I have to use `sh`.  
+My plan was to do the following:
+
+```java
+Runtime.getRuntime().exec("sh -c curl -L 7f.uk>/dev/tty");
+```
+
+Alas, it'd get split by Java, so the equivalent is this:
+
+```java
+Runtime.getRuntime.exec(new String[5] { "sh", "-c", "curl", "-L", "7f.uk>/dev/tty" });
+```
+
+This isn't good - I need to work around that. Well, the trick that I found is pretty neat - I use the shell's variable expansion (which means I have to use `bash` and not `sh`) to get an existing environment variable with a space in it. Luckily, `$IFS` is literally the variable that I need - it contains all the token-splitters for the commandline.  
+Therefore, my goal is running this:
+
+```java
+Runtime.getRuntime().exec("bash -c curl${IFS:1:1}-L${IFS:1:1}7f.uk>/d*/tty");
+```
+
+Note that I also used `/d*/tty` to shorten `/dev` by one character - neat!
+As usual, I applied all the tricks from before - luckily my code is much smaller (bytecode is only `9` bytes now!) and the constant pool has only `16` entries. In total - we are at `283` bytes!  
+The bytecode:
+
+```assembly
+b8 00 01        invokestatic     java/lang/Runtime::getRuntime()Ljava/lang/Runtime; (C1)
+12 02           ldc              "bash -c curl${IFS:1:1}-L${IFS:1:1}7f.uk>/d*/tty" (C2)
+b6 00 03        invokevirtual    java/lang/Runtime::exec(Ljava/lang/String;)Ljava/lang/Process; (C3)
+b1              return
+```
+
+The content:
+```
+00000000│cafe babe 0000 0037│0011 0a00 0800 0908│.......7........
+00000010│000a 0a00 0800 0b07│0005 0100 0443 6f64│.............Cod
+00000020│6501 0004 6d61 696e│0100 1628 5b4c 6a61│e...main...([Lja
+00000030│7661 2f6c 616e 672f│5374 7269 6e67 3b29│va/lang/String;)
+00000040│5607 000c 0c00 0d00│0e01 002f 6261 7368│V........../bash
+00000050│202d 6320 6375 726c│247b 4946 533a 313a│ -c curl${IFS:1:
+00000060│317d 2d4c 247b 4946│533a 313a 317d 3766│1}-L${IFS:1:1}7f
+00000070│2e75 6b3e 2f64 2a2f│7474 790c 000f 0010│.uk>/d*/tty.....
+00000080│0100 116a 6176 612f│6c61 6e67 2f52 756e│...java/lang/Run
+00000090│7469 6d65 0100 0a67│6574 5275 6e74 696d│time...getRuntim
+000000a0│6501 0015 2829 4c6a│6176 612f 6c61 6e67│e...()Ljava/lang
+000000b0│2f52 756e 7469 6d65│3b01 0004 6578 6563│/Runtime;...exec
+000000c0│0100 2728 4c6a 6176│612f 6c61 6e67 2f53│..'(Ljava/lang/S
+000000d0│7472 696e 673b 294c│6a61 7661 2f6c 616e│tring;)Ljava/lan
+000000e0│672f 5072 6f63 6573│733b 0421 0004 0008│g/Process;.!....
+000000f0│0000 0000 0001 0009│0006 0007 0001 0005│................
+00000100│0000 0015 0002 0001│0000 0009 b800 0112│................
+00000110│02b6 0003 b100 0000│0000 00            │...........
+```
+
 ## Summary
 All in all, we found good ways of minimizing the class:
 1. Implement our class `abstract`, thus getting rid of `<init>` completely.
@@ -505,6 +560,7 @@ All in all, we found good ways of minimizing the class:
 3. Getting rid of `Exception` handling.
 4. Not cleaning up the stack.
 5. Re-using strings (e.g. calling your class `Code` or `curl` in our case).
+6. Using things like `/dev/tty` to write to the output and substrings of `$IFS` to work-around spaces.
 
 I gotta say, Binary Golf is super fun and makes you learn new things every day!  
 I really enjoy the challenge and considering playing some more, maybe with an Android App this time.
