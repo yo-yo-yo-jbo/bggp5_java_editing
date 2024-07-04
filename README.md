@@ -553,6 +553,14 @@ The content:
 00000110│02b6 0003 b100 0000│0000 00            │...........
 ```
 
+### Tooling
+I've also decided to upload a new utility called [miniclass-exec.py] that gets a commandline and writes a new `Code.class` file to disk.  
+The cool thing is that it tries to use the `${IFS:1:1}` trick to any whitespace, and also tries to minimize the file size by attempting to use variables.  
+For example, `echo hello world how are you` will turn into `bash -c A=${IFS:0:1};echo${A}hello${A}world${A}how${A}are${A}you`.
+
+![Miniclass-exec](demo.png)
+
+
 ## Summary
 All in all, we found good ways of minimizing the class:
 1. Implement our class `abstract`, thus getting rid of `<init>` completely.
