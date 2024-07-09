@@ -553,6 +553,8 @@ The content:
 00000110│02b6 0003 b100 0000│0000 00            │...........
 ```
 
+On macOS you can even go for `/d*/*y` as a replacement for `/dev/tty` but I decided I want to support both macOS and Linux (in which `/d*/*y` is not unique on some distros).
+
 ### Tooling
 I've also decided to upload a new utility called [miniclass-exec.py] that gets a commandline and writes a new `Code.class` file to disk.  
 The cool thing is that it tries to use the `${IFS:1:1}` trick to any whitespace, and also tries to minimize the file size by attempting to use variables.  
