@@ -1,314 +1,193 @@
 #!/usr/bin/env python3
-import sys
 import struct
-from enum import Enum
 import binascii
-import colorama
+import sys
 import os
 
-# Initialize colorama
-colorama.init()
+# Logo
+LOGO = '''
+\x1b[38;5;208m
+███╗   ███╗██╗███╗   ██╗██╗ ██████╗██╗      █████╗ ███████╗███████╗      ███████╗██╗  ██╗███████╗ ██████╗
+████╗ ████║██║████╗  ██║██║██╔════╝██║     ██╔══██╗██╔════╝██╔════╝      ██╔════╝╚██╗██╔╝██╔════╝██╔════╝
+██╔████╔██║██║██╔██╗ ██║██║██║     ██║     ███████║███████╗███████╗█████╗█████╗   ╚███╔╝ █████╗  ██║
+██║╚██╔╝██║██║██║╚██╗██║██║██║     ██║     ██╔══██║╚════██║╚════██║╚════╝██╔══╝   ██╔██╗ ██╔══╝  ██║
+██║ ╚═╝ ██║██║██║ ╚████║██║╚██████╗███████╗██║  ██║███████║███████║      ███████╗██╔╝ ██╗███████╗╚██████╗
+╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝      ╚══════╝╚═╝  ╚═╝╚══════╝ ╚═════╝
+\x1b[0m
+                    Coded by:            \x1b[38;5;39mJonathan Bar Or (@yo_yo_yo_jbo)\x1b[0m
+                    Writeup:             \x1b[38;5;39mhttps://github.com/yo-yo-yo-jbo/bggp5_java_editing\x1b[0m
+'''
 
-# Constant types
-class ConstType(Enum):
-    CONSTANT_Class = 7
-    CONSTANT_Fieldref = 9
-    CONSTANT_Methodref= 10
-    CONSTANT_InterfaceMethodref = 11
-    CONSTANT_String = 8
-    CONSTANT_Integer = 3
-    CONSTANT_Float = 4
-    CONSTANT_Long = 5
-    CONSTANT_Double = 6
-    CONSTANT_NameAndType = 12
-    CONSTANT_Utf8 = 1
-    CONSTANT_MethodHandle = 15
-    CONSTANT_MethodType = 16
-    CONSTANT_InvokeDynamic = 18
+# Class header and footer
+HEADER = binascii.unhexlify('cafebabe0000003700110a0008000908000a0a0008000b070005010004436f64650100046d61696e010016285b4c6a6176612f6c616e672f537472696e673b295607000c0c000d000e')
+FOOTER = binascii.unhexlify('0c000f00100100116a6176612f6c616e672f52756e74696d6501000a67657452756e74696d6501001528294c6a6176612f6c616e672f52756e74696d653b01000465786563010027284c6a6176612f6c616e672f537472696e673b294c6a6176612f6c616e672f50726f636573733b04210004000800000000000100090006000700010005000000150002000100000009b800011202b60003b1000000000000')
 
-class JavaObject(object):
+# Replacers
+REPLACERS = [ ' ', '\t', '\n' ]
+REPLACEMENT = '${IFS}'
+
+# Java constant for UTF-8 string tags
+CONSTANT_Utf8 = 1
+
+# The expected class name
+EXPECTED_CLASS_NAME = 'Code.class'
+
+# The commandline prefix
+COMMANDLINE_PREFIX = 'bash -c '
+
+# Byte colors (range, color, is_printable)
+BYTE_COLORS = [
+    (range(0x00, 0x00 + 1), '\x1b[38;5;240m', False),
+    (range(0x01, 0x1f + 1), '\x1b[38;5;219m', False),
+    (range(0x20, 0x2f + 1), '\x1b[38;5;27m', True),
+    (range(0x30, 0x39 + 1), '\x1b[38;5;81m', True),
+    (range(0x3a, 0x40 + 1), '\x1b[38;5;27m', True),
+    (range(0x41, 0x5a + 1), '\x1b[38;5;39m', True),
+    (range(0x5b, 0x60 + 1), '\x1b[38;5;27m', True),
+    (range(0x61, 0x7a + 1), '\x1b[38;5;45m', True),
+    (range(0x7b, 0x7e + 1), '\x1b[38;5;27m', True),
+    (range(0x7f, 0x7f + 1), '\x1b[38;5;88m', False),
+    (range(0x80, 0x80 + 1), '\x1b[38;5;208m', False),
+    (range(0x81, 0x8f + 1), '\x1b[38;5;226m', False),
+    (range(0x90, 0x90 + 1), '\x1b[38;5;208m', False),
+    (range(0x91, 0x9f + 1), '\x1b[38;5;226m', False),
+    (range(0xa0, 0xa0 + 1), '\x1b[38;5;208m', False),
+    (range(0xa1, 0xaf + 1), '\x1b[38;5;226m', False),
+    (range(0xb0, 0xb0 + 1), '\x1b[38;5;208m', False),
+    (range(0xb1, 0xbf + 1), '\x1b[38;5;226m', False),
+    (range(0xc0, 0xc0 + 1), '\x1b[38;5;208m', False),
+    (range(0xc1, 0xcf + 1), '\x1b[38;5;226m', False),
+    (range(0xd0, 0xd0 + 1), '\x1b[38;5;208m', False),
+    (range(0xd1, 0xdf + 1), '\x1b[38;5;226m', False),
+    (range(0xe0, 0xe0 + 1), '\x1b[38;5;208m', False),
+    (range(0xe1, 0xef + 1), '\x1b[38;5;226m', False),
+    (range(0xf0, 0xf0 + 1), '\x1b[38;5;208m', False),
+    (range(0xf1, 0xfe + 1), '\x1b[38;5;91m', False),
+    (range(0xff, 0xff + 1), '\x1b[38;5;88m', False)
+]
+
+def get_colored_byte(byte):
     """
-        Container for a class that can be freely be added attributes.
+        Get the byte with its color (hex_form, text_form).
     """
 
-    def __init__(self, const_pool, start_offset):
-        """
-            Constructor.
-        """
+    # Find the byte color
+    for entry in BYTE_COLORS:
+        if byte in entry[0]:
+            text = chr(byte) if entry[2] else '.'
+            return (f'{entry[1]}{byte:02x}\x1b[0m', f'{entry[1]}{text}\x1b[0m')
 
-        # Keep a reference to the constant pool
-        self._const_pool = const_pool
+    # Should never happen
+    raise Exception(f'Could not find color for byte {byte}')
 
-        # Used for pretty-printing
-        self._depth = 0
+def print_bytes(data):
+    """
+        Pretty-prints the given bytes data.
+    """
 
-        # Just tracking
-        self._start_offset = start_offset
+    # Iterate all 16-byte chunks
+    for offset in range(0, len(data), 16):
 
-    def __str__(self):
-        """
-            Returns a string.
-        """
+        # Prepare bytes part and text part
+        bytes_part = ''
+        text_part = ''
 
-        # Return a reprenting string
-        prefix = ('%.8x' % (self._start_offset,)) + ' ' + ('  ' * self._depth)
-        result = []
-        for k, v in self.__dict__.items():
-            if k.startswith('_'):
+        # Will be used for pretty printing
+        hex_raw_len = 0
+
+        # Prepare bytes
+        chunk = data[offset:offset + 16]
+        for i in range(len(chunk)):
+
+            # Get the colors
+            hex_form, text_form = get_colored_byte(chunk[i])
+
+            # Add byte
+            bytes_part += hex_form
+            text_part += text_form
+            hex_raw_len += 2
+
+            # Add space if necessary
+            if i % 2 == 1 and i < len(chunk) - 1:
+                bytes_part += ' '
+                hex_raw_len += 1
+
+        # Optionally append spaces
+        bytes_part += ' ' * (39 - hex_raw_len)
+
+        # Print the line
+        print(f'                    \x1b[38;5;246m{offset:08x}\x1b[0m\x1b[38;5;235m|\x1b[0m{bytes_part}\x1b[38;5;235m|\x1b[0m{text_part}')
+
+def main():
+    """
+        Main routine.
+    """
+
+    # Initialize colors and print logo
+    print(LOGO)
+
+    # Best-effort
+    try:
+
+        # Parse arguments
+        assert len(sys.argv) > 2, Exception(f'Wrong arguments (out_filename, commandline).')
+        out_filename = sys.argv[1]
+        commandline = ' '.join(sys.argv[2:])
+        assert os.path.basename(out_filename) == EXPECTED_CLASS_NAME, Exception(f'Output filename must be "{EXPECTED_CLASS_NAME}".') 
+
+        # Will contain the sanitized commandline
+        cmd = commandline[:]
+        
+        # Build the replaced commandline with no whitespaces
+        var_name = 'A'
+        for k in REPLACERS:
+
+            # Skip if the type of whitespace doesn't appear
+            if k not in cmd:
                 continue
-            if k.endswith('_index'):
-                result.append(f'{prefix}{colorama.Fore.WHITE}{colorama.Style.BRIGHT}{k}{colorama.Style.RESET_ALL} ({colorama.Fore.RED}{v}{colorama.Style.RESET_ALL}) -->')
-                if v <= 0 or v > len(self._const_pool):
-                    result.append(f'{prefix}{colorama.Fore.RED}{colorama.Style.BRIGHT}OUT OF BOUNDS{colorama.Style.RESET_ALL}')
-                else:
-                    other_obj = self._const_pool[v - 1]
-                    other_obj._depth = self._depth + 1
-                    result.append(f'{other_obj}')
-            elif isinstance(v, list):
-                result.append(f'{prefix}{colorama.Fore.WHITE}{colorama.Style.BRIGHT}{k}{colorama.Style.RESET_ALL}: [')
-                for other_obj in v:
-                    other_obj._depth = self._depth + 1
-                    result.append(f'{other_obj}')
-                result.append(f'{prefix}]')
-            elif isinstance(v, bytes):
-                data = binascii.hexlify(v, ' ').decode()
-                result.append(f'{prefix}{colorama.Fore.WHITE}{colorama.Style.BRIGHT}{k}{colorama.Style.RESET_ALL} = {colorama.Fore.RED}{data}{colorama.Style.RESET_ALL}')
-            elif isinstance(v, str):
-                fore_color = colorama.Fore.YELLOW + colorama.Style.DIM if k == 'tag' else colorama.Fore.LIGHTBLUE_EX
-                result.append(f'{prefix}{colorama.Fore.WHITE}{colorama.Style.BRIGHT}{k}{colorama.Style.RESET_ALL} = {fore_color}{v}{colorama.Style.RESET_ALL}')
+
+            # Replace whitespace with the $IFS substring if necessary
+            cmd_ifs = cmd.replace(k, REPLACEMENT)
+
+            # Try to replace using intermediate variables
+            cmd_var = f'{var_name}={REPLACEMENT};' + cmd.replace(k, '${' + var_name + '}')
+
+            # Take the better of the two
+            if len(cmd_var) < len(cmd_ifs):
+                cmd = cmd_var
+                var_name = chr(ord(var_name) + 1)
             else:
-                result.append(f'{prefix}{colorama.Fore.WHITE}{colorama.Style.BRIGHT}{k}{colorama.Style.RESET_ALL} = {colorama.Fore.GREEN}{v}{colorama.Style.RESET_ALL}')
-        return '\n'.join(result)
+                cmd = cmd_ifs
 
-class JavaClass(object):
-    """
-        Represents a Java class.
-    """
+        # Add the bash prefix
+        cmd = f'{COMMANDLINE_PREFIX}{cmd}'
 
-    def __init__(self, file_path):
-        """
-            Constructor.
-        """
+        # Encode string as bytes and ensure length
+        cmd_bytes = cmd.encode('utf-8')
+        assert len(cmd_bytes) < 2 ** (8 * struct.calcsize('>H')), Exception(f'Resulting commandline is too long ({len(cmd_bytes)} bytes)')
 
-        # Save the file path and parse
-        self.file_path = file_path
-        self._parse()
+        # Encode the string in the constant pool
+        class_bytes = HEADER + struct.pack('>BH', CONSTANT_Utf8, len(cmd_bytes)) + cmd_bytes + FOOTER
 
-    @staticmethod
-    def _read_bytes_from_fp(fp, struct_fmt):
-        """
-            Reads a struct format from the given file.
-        """
-
-        # Return either a tuple or a single entry
-        result = struct.unpack(struct_fmt, fp.read(struct.calcsize(struct_fmt)))
-        if len(result) == 1:
-            return result[0]
-        return result
-
-    def _parse(self):
-        """
-            Parses the class file.
-        """
-
-        # Open the file for reading
-        with open(self.file_path, 'rb') as fp:
-
-            # Parse the header
-            self.const_pool = []
-            self.header = JavaObject(self.const_pool, fp.tell())
-            self.header.magic, self.header.version_minor, self.header.major, const_pool_count = JavaClass._read_bytes_from_fp(fp, '>LHHH')
-            assert self.header.magic == 0xCAFEBABE, Exception(f'Invalid header magic {hdr_magic}')
-            assert const_pool_count > 0, Exception(f'Invalid constant pool count {const_pool_count}')
-
-            # Parse the constasnt pool
-            for index in range(const_pool_count - 1):
-
-                # Save type and parse it
-                curr_obj = JavaObject(self.const_pool, fp.tell())
-                curr_obj.tag = JavaClass._read_bytes_from_fp(fp, '>B')
-                if curr_obj.tag == ConstType.CONSTANT_Class.value:
-                    curr_obj.name_index = JavaClass._read_bytes_from_fp(fp, '>H')
-                elif curr_obj.tag in (ConstType.CONSTANT_Fieldref.value, ConstType.CONSTANT_Methodref.value, ConstType.CONSTANT_InterfaceMethodref.value):
-                    curr_obj.class_index, curr_obj.name_and_type_index = JavaClass._read_bytes_from_fp(fp, '>HH')
-                elif curr_obj.tag == ConstType.CONSTANT_String.value:
-                    curr_obj.string_index = JavaClass._read_bytes_from_fp(fp, '>H')
-                elif curr_obj.tag in (ConstType.CONSTANT_Integer.value, ConstType.CONSTANT_Float.value):
-                    curr_obj.data = JavaClass._read_bytes_from_fp(fp, '>l')
-                elif curr_obj.tag in (ConstType.CONSTANT_Long.value, ConstType.CONSTANT_Double.value):
-                    hi, lo = JavaClass._read_bytes_from_fp(fp, '>lL')
-                    curr_obj.data = hi << 32 + lo
-                elif curr_obj.tag == ConstType.CONSTANT_NameAndType.value:
-                    curr_obj.name_index, curr_obj.descriptor_index = JavaClass._read_bytes_from_fp(fp, '>HH')
-                elif curr_obj.tag == ConstType.CONSTANT_Utf8.value:
-                    curr_len = JavaClass._read_bytes_from_fp(fp, '>H')
-                    curr_obj.data = fp.read(curr_len).decode('utf-8')
-                elif curr_obj.tag == ConstType.CONSTANT_MethodHandle.value:
-                    curr_obj.reference_kind, curr_obj.reference_index = JavaClass._read_bytes_from_fp(fp, '>BH')
-                elif curr_obj.tag == ConstType.CONSTANT_MethodType.value:
-                    curr_obj.descriptor_index = JavaClass._read_bytes_from_fp(fp, '>H')
-                elif curr_obj.tag == ConstType.CONSTANT_InvokeDynamic.value:
-                    curr_obj.bootstrap_method_attr_index, curr_obj.name_and_type_index = JavaClass._read_bytes_from_fp(fp, '>HH')
-                else:
-                    raise Exception(f'Invalid tag {curr_obj.tag}')
-
-                # Prettify tag
-                curr_obj.tag = ConstType(curr_obj.tag).name
-
-                # Add entry
-                self.const_pool.append(curr_obj)
-
-            # Parse the class descriptor
-            self.class_descriptor = JavaObject(self.const_pool, fp.tell())
-            self.class_descriptor.access_flags, self.class_descriptor.this_class_index, self.class_descriptor.super_class_index, interfaces_count = JavaClass._read_bytes_from_fp(fp, '>HHHH')
-
-            # Save interfaces
-            self.interfaces = []
-            for interface_index in range(interfaces_count):
-                self.interfaces.append(JavaClass._read_bytes_from_fp(fp, '>H'))
-
-            # Parse fields
-            fields_count = JavaClass._read_bytes_from_fp(fp, '>H')
-            self.fields = []
-            for field_index in range(fields_count):
-                field = JavaObject(self.const_pool, fp.tell())
-                field.access_flags, field.name_index, field.descriptor_index = JavaClass._read_bytes_from_fp(fp, '>HHH')
-                field.attributes = self._parse_attributes(fp)
-                self.fields.append(field)
-
-            # Parse methods
-            methods_count = JavaClass._read_bytes_from_fp(fp, '>H')
-            self.methods = []
-            for method_index in range(methods_count):
-                method = JavaObject(self.const_pool, fp.tell())
-                method.access_flags, method.name_index, method.descriptor_index = JavaClass._read_bytes_from_fp(fp, '>HHH')
-                method.attributes = self._parse_attributes(fp)
-                self.methods.append(method)
-
-            # Parse attributes
-            self.attributes = self._parse_attributes(fp)
-
-            # Save the total file size
-            self._size = fp.tell()
-
-    def _parse_attributes(self, fp):
-        """
-            Parses attributes.
-        """
-
-        # Read the number of attributes
-        attributes_count = JavaClass._read_bytes_from_fp(fp, '>H')
-
-        # Parse
-        attributes = []
-        for attr_index in range(attributes_count):
-            attr = JavaObject(self.const_pool, fp.tell())
-            attr.attribute_name_index, attr_len = JavaClass._read_bytes_from_fp(fp, '>HL')
-            attr.data = fp.read(attr_len)
-            attributes.append(attr)
-
-        # Return attributes
-        return attributes
-
-def clear_screen():
-    """
-        Clears the screen.
-    """
-
-    # Clear the screen
-    if os.name == 'nt':
-        os.system('cls')
-    else:
-        os.system('clear')
-
-def do_menu(jclass):
-    """
-        Present a menu and act accordingly.
-    """
-
-    # Run forever
-    is_first = True
-    while True:
-
-        # Show the menu
-        if not is_first:
-            print('')
-        is_first = False
-        print(f'{colorama.Fore.CYAN}MENU{colorama.Style.RESET_ALL}')
-        print(f'{colorama.Fore.WHITE}{colorama.Style.BRIGHT}FILE{colorama.Style.RESET_ALL}: {colorama.Fore.GREEN}{os.path.basename(jclass.file_path)}{colorama.Style.RESET_ALL} ({colorama.Fore.RED}{jclass._size}{colorama.Style.RESET_ALL} bytes)')
-        print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}H{colorama.Style.RESET_ALL}]eader')
-        print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}C{colorama.Style.RESET_ALL}]onstant pool ({colorama.Fore.LIGHTBLUE_EX}{len(jclass.const_pool)}{colorama.Style.RESET_ALL})')
-        print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}D{colorama.Style.RESET_ALL}]escriptor for the class')
-        print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}I{colorama.Style.RESET_ALL}nterfaces ({colorama.Fore.LIGHTBLUE_EX}{len(jclass.interfaces)}{colorama.Style.RESET_ALL})')
-        print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}F{colorama.Style.RESET_ALL}]ields ({colorama.Fore.LIGHTBLUE_EX}{len(jclass.fields)}{colorama.Style.RESET_ALL})')
-        print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}M{colorama.Style.RESET_ALL}]ethods ({colorama.Fore.LIGHTBLUE_EX}{len(jclass.methods)}{colorama.Style.RESET_ALL})')
-        print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}A{colorama.Style.RESET_ALL}]ttributes ({colorama.Fore.LIGHTBLUE_EX}{len(jclass.attributes)}{colorama.Style.RESET_ALL})')
-        print(f'[{colorama.Fore.WHITE}{colorama.Style.BRIGHT}Q{colorama.Style.RESET_ALL}]uit')
-
-        # Get choice and parse number
-        choice = input('> ').upper()
-        num = None
-        clear_screen()
-        try:
-            if len(choice) > 1:
-                num = int(choice[1:])
-                choice = choice[0]
-        except Exception:
-            print(f'{colorama.Fore.RED}INVALID CHOICE{colorama.Style.RESET_ALL}')
-            continue
-
-        # Handle quitting
-        if choice == 'Q':
-            break
-
-        # Print the header
-        elif choice == 'H':
-            print(f'{colorama.Fore.CYAN}HEADER{colorama.Style.RESET_ALL}')
-            print(jclass.header)
-            continue
-
-        # Print the class descriptor
-        elif choice == 'D':
-            print(f'{colorama.Fore.CYAN}CLASS DESCRIPTOR{colorama.Style.RESET_ALL}')
-            print(jclass.class_descriptor)
-            continue
-
-        # Maps choices to lists and use it to print list items
-        choice_to_list = { 'C' : (jclass.const_pool, 'CONSTANT POOL'),
-                           'I' : (jclass.interfaces, 'INTERFACES'),
-                           'F' : (jclass.fields, 'FIELDS'),
-                           'M' : (jclass.methods, 'METHODS'),
-                           'A' : (jclass.attributes, 'ATTRIBUTES') }
-        if choice not in choice_to_list:
-            print(f'{colorama.Fore.RED}INVALID CHOICE{colorama.Style.RESET_ALL}')
-            continue
-        if num is None:
-            print(f'{colorama.Fore.CYAN}{choice_to_list[choice][1]}{colorama.Style.RESET_ALL}')
-            for obj in choice_to_list[choice][0]:
-                print(obj)
-            continue
-        if num <= 0 or num > len(choice_to_list[choice][0]):
-            print(f'{colorama.Fore.RED}INVALID CHOICE{colorama.Style.RESET_ALL}')
-            continue
-        print(f'{colorama.Fore.CYAN}{choice_to_list[choice][1]}{colorama.Style.RESET_ALL} ({colorama.Fore.RED}{num}{colorama.Style.RESET_ALL})')
-        print(choice_to_list[choice][0][num - 1])
-        continue
-
-        # Invalid choice
-        print(f'{colorama.Fore.RED}INVALID CHOICE{colorama.Style.RESET_ALL}')
-
-        # Print one more linebreak
+        # Print data
+        print(f'                    Output path:         \x1b[38;5;39m{out_filename}\x1b[0m')
+        print(f'                    Original string:     \x1b[38;5;39m{commandline}\x1b[0m')
+        print(f'                    Encoded string size: \x1b[38;5;39m{len(cmd_bytes)} bytes\x1b[0m')
+        print(f'                    Total class size:    \x1b[38;5;39m{len(class_bytes)} bytes\x1b[0m')
+        print(f'                    New string:          \x1b[38;5;39m{cmd}\x1b[0m')
+        
+        # Print the file bytes
         print('')
+        print_bytes(class_bytes)
 
-# Catch exceptions
-try:
+        # Write output
+        with open(out_filename, 'wb') as fp:
+            fp.write(class_bytes)
 
-    # Parse the Java class
-    jclass = JavaClass(sys.argv[1])
+    except Exception as ex:
 
-    # Run menu
-    clear_screen()
-    do_menu(jclass)
+        # Output exception
+        print(f'                    Error:               \x1b[38;5;88m{ex}\x1b[0m')
 
-except Exception as e:
-    print(f'{colorama.Fore.RED}ERROR{colorama.Style.RESET_ALL}: {e}')
+if __name__ == '__main__':
+    main()
